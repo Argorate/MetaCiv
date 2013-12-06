@@ -12,7 +12,7 @@ public class A_ChangeAttribute extends Action{
 
 	@Override
 	public Action effectuer(Humain h) {
-		h.getAttr().put(attributeName, h.getAttr().get(attributeName) + variation );
+		h.putAttr(attributeName, h.getAttr().get(attributeName) + variation );
 		return nextAction;
 	}
 
@@ -38,7 +38,7 @@ public class A_ChangeAttribute extends Action{
 		if (schemaParametres == null){
 			schemaParametres = new ArrayList<String[]>();
 			String[] attrName = {"**Attribute**" , "Changed attribute"};
-			String[] n = {"**Integer**" , "n", "-20" , "20" , "0"};
+			String[] n = {"**Integer**" , "n", "-100" , "100" , "100"};
 
 			schemaParametres.add(attrName);
 			schemaParametres.add(n);
@@ -46,6 +46,13 @@ public class A_ChangeAttribute extends Action{
 		}
 		return schemaParametres;	
 	}
+	
+	
+	@Override
+	public String getInfo() {
+		return super.getInfo() + " Change the current value of an attribute.<html>";
+	}
+
 
 	
 }

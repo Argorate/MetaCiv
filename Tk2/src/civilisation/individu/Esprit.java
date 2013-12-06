@@ -6,11 +6,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Stack;
 
 import civilisation.Configuration;
 import civilisation.Group;
 import civilisation.individu.cognitons.NCogniton;
-import civilisation.individu.cognitons.PCogniton;
+import civilisation.individu.cognitons.CCogniton;
 
 
 import civilisation.individu.plan.NPlan;
@@ -28,7 +29,7 @@ import civilisation.individu.plan.action.Action;
 public class Esprit {
 	
 	/* Les diff≈Ωrentes listes contenants les croyances de l'agent */
-	ArrayList<PCogniton> cognitons;
+	ArrayList<CCogniton> cognitons;
 	
 	/* La liste des projets envisageable par l'agent*/
 	ArrayList<NPlanPondere> plans;
@@ -43,6 +44,7 @@ public class Esprit {
 	Humain h;
 	NPlanPondere planEnCours;
 	Action actionEnCours;
+	Stack<Action> actions = new Stack<Action>();
 	
 	int poidsTotal;
 	int progression;
@@ -54,7 +56,7 @@ public class Esprit {
 	
 	public Esprit(Humain h)
 	{
-		cognitons = new ArrayList<PCogniton>();
+		cognitons = new ArrayList<CCogniton>();
 		plans = new ArrayList<NPlanPondere>();
 		actionsData = new HashMap<Action , Object>();
 		groups = new HashMap<Group , String>();
@@ -80,7 +82,7 @@ public class Esprit {
 	private void initialisationStandard()
 	{
 		for (NCogniton cogni : Configuration.cognitonsDeBase) {
-			cognitons.add(new PCogniton(cogni));
+			cognitons.add(new CCogniton(cogni));
 		}
 		for (int i = 0; i < cognitons.size(); i++) {
 			cognitons.get(i).mettreEnPlace(this);
@@ -93,14 +95,24 @@ public class Esprit {
 	 */
 	public void penser()
 	{
-		/*Apply the Auto-plan*/
+		
+		
+		/*Apply the Self-plan*/
 		if (Configuration.autoPlan != null) {
-			Action next = Configuration.autoPlan.getActions().get(0);
-			while ((next = next.effectuer(h)) != null);
+			actions.push(null); //end of self-plan marker
+
+			Configuration.autoPlan.activer(h, Configuration.autoPlan.getActions().get(0));
+			
+			Action a = null;
+
+			while (( a = actions.pop()) != null) {
+				System.out.println("a depop : " + a + "depop" + actions);
+				Configuration.autoPlan.activer(h, a);
+			}
 		}
 
 		/* Select the new plan if there are no plan to do */
-		if ((planEnCours == null && actionEnCours == null))
+		if ((/*planEnCours == null && */actionEnCours == null))
 		{
 			//System.out.println("Poids total :" + poidsTotalPlan);
 			int alea = (int) (Math.random()*(poidsTotalPlan + 1));
@@ -111,9 +123,14 @@ public class Esprit {
 				i++;
 			}
 			planEnCours = plans.get(i);
+			actions.push(null); //end of plan marker
 			//System.out.println("Agent choisi le plan : " + planEnCours.toString());
+		} else {
+			System.out.println(actions);
 		}
 		planEnCours.activer(actionEnCours);
+		this.actionEnCours = actions.pop();
+
 	}
 	
 	/**
@@ -142,18 +159,21 @@ public class Esprit {
 		return progression;
 	}
 
-	public ArrayList<PCogniton> getCognitons() {
+	public ArrayList<CCogniton> getCognitons() {
 		return cognitons;
 	}
 
-	/**
-	 * Ajoute un nouveau plan aux plans disponible pour l'agent.
-	 * @param nouveauProjet
-	 */
 	public void addPlan(NPlan plan)
 	{
 		plans.add(new NPlanPondere( 0 , plan , this.getHumain() , this));
 	}
+	
+	public void addPlan(NPlan plan , CCogniton cCogniton)
+	{
+		plans.add(new NPlanPondere( 0 , plan , this.getHumain() , this));
+	}
+	
+	
 
 	public ArrayList<NPlanPondere> getPlans() {
 		return plans;
@@ -271,10 +291,47 @@ public class Esprit {
 	}
 
 	public void addCogniton(NCogniton cogni){
-		cognitons.add(new PCogniton(cogni));
+		cognitons.add(new CCogniton(cogni));
 		cogni.mettreEnPlace(this);
 	}
+
+	public void removeCogniton(NCogniton c) {
+		//System.out.println("remove cogniton " + c.getNom());
+		for (int i = 0 ; i < this.cognitons.size(); i++) {
+			if (cognitons.get(i).getCogniton() == c) {
+				c.modifierPlans(false, this);
+				cognitons.remove(i);
+				this.redefinirPoids();
+			}
+		}
+	}
+
+	public int getPoidsTotalPlan() {
+		return poidsTotalPlan;
+	}
+
+	public void setPoidsTotalPlan(int poidsTotalPlan) {
+		this.poidsTotalPlan = poidsTotalPlan;
+	}
+
+	public Stack<Action> getActions() {
+		return actions;
+	}
+
+	public void setActions(Stack<Action> actions) {
+		this.actions = actions;
+	}
 	
+	public boolean ownCogniton(NCogniton cogniton) {
+		
+		for (int i = 0 ; i < this.cognitons.size(); i++) {
+			if (cognitons.get(i).getCogniton() == cogniton) {
+				return true;
+			}
+		}
+		return false;
+	} 
+
 	
 	
 	
