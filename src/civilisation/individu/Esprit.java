@@ -14,10 +14,12 @@ import civilisation.Group;
 import civilisation.GroupAndRole;
 import civilisation.individu.cognitons.NCogniton;
 import civilisation.individu.cognitons.CCogniton;
+import civilisation.individu.cognitons.Need;
 import civilisation.individu.cognitons.TypeDeCogniton;
 import civilisation.individu.plan.NPlan;
 import civilisation.individu.plan.NPlanPondere;
 import civilisation.individu.plan.action.Action;
+import civilisation.world.World;
 
 /** 
  * Classe de gestion des comportements des agents humain
@@ -72,7 +74,7 @@ public class Esprit {
 	{
 		for (NCogniton cogni : Configuration.cognitonsDeBase) {
 			if (Math.random() * 100.0 < (double)cogni.getStartChance())
-			cognitons.add(new CCogniton(cogni));
+			cognitons.add(new CCogniton(cogni, this));
 		}
 		for (int i = 0; i < cognitons.size(); i++) {
 			cognitons.get(i).mettreEnPlace(this);
@@ -98,6 +100,16 @@ public class Esprit {
 				Configuration.autoPlan.activer(h, a);
 			}
 		}
+		
+		//Traitement à faire tous les 5 ticks seulement (pour économiser)
+		if(World.tick() % 5 == 0)
+		{
+			ArrayList<CCogniton> listCNeed = getCognitonsOfType(TypeDeCogniton.NEED);
+			for(int i = 0 ; i < listCNeed.size() ; i++)
+			{
+				listCNeed.get(i).decreaseNeed();
+			}
+		}
 
 		/* Select the new plan if there are no action to do */
 		if ((/*planEnCours == null && */actionEnCours == null))
@@ -105,9 +117,9 @@ public class Esprit {
 			computeTotalWeight(); //TODO : remove and re-write dynamic evolution of total weight
 			int alea = (int) (Math.random()*(poidsTotalPlan));
 			int i = 0;
-			while (alea >= plans.get(i).getPoids() /*|| plans.get(i).getType() == 1*/)
+			while(alea >= plans.get(i).getPoids() /*|| plans.get(i).getType() == 1*/)
 			{
-				if (plans.get(i).getPoids() > 0) {alea -= plans.get(i).getPoids();	} /*les poids negatifs ne sont pas pris en compte*/		
+				if(plans.get(i).getPoids() > 0) {alea -= plans.get(i).getPoids();	} /*les poids negatifs ne sont pas pris en compte*/		
 				i++;
 			}
 			planEnCours = plans.get(i);
@@ -269,7 +281,7 @@ public class Esprit {
 	}
 
 	public void addCogniton(NCogniton cogni){
-		cognitons.add(new CCogniton(cogni));
+		cognitons.add(new CCogniton(cogni, this));
 		cogni.mettreEnPlace(this , 1.0); //1.0 is the standard weigth for new cogniton
 	}
 

@@ -16,8 +16,12 @@ import civilisation.world.World;
 public class Marketer 
 {
 	static private Marketer singleton;
+	static int ALPHA_NEGOCIATE = 1;
+	static int ALPHA_EXCHANGE_RATE = 1;
+	
 	public Humain proposerAgent;
 	public Humain receiverAgent;
+	
 	private int toleranceTick = 1000;
 	private int toleranceExchangeRate = 3;
 	
@@ -119,9 +123,9 @@ public class Marketer
 	{	
 		if(transaction != null)
 		{
-			float exchangeRateTransaction = transaction.negociate(proposerAgent, receiverAgent, 1); 
-			float exchangeRateAgent1 	  = finalExchangeRate(proposerAgent, transaction.getNameRessourceBought(), transaction.getNameRessourceSold(), 1);
-			float exchangeRateAgent2 	  = finalExchangeRate(receiverAgent, transaction.getNameRessourceBought(), transaction.getNameRessourceSold(), 1);
+			float exchangeRateTransaction = transaction.negociate(proposerAgent, receiverAgent, ALPHA_NEGOCIATE); 
+			float exchangeRateAgent1 	  = finalExchangeRate(proposerAgent, transaction.getNameRessourceBought(), transaction.getNameRessourceSold(), ALPHA_EXCHANGE_RATE);
+			float exchangeRateAgent2 	  = finalExchangeRate(receiverAgent, transaction.getNameRessourceBought(), transaction.getNameRessourceSold(), ALPHA_EXCHANGE_RATE);
 	
 			//DEAL IS OK
 			if(isAnAcceptableExchangeRate(exchangeRateAgent1, exchangeRateTransaction) && isAnAcceptableExchangeRate(exchangeRateAgent2, exchangeRateTransaction))
@@ -163,7 +167,7 @@ public class Marketer
 		int QuantityRessourceBought 	= Math.min(satisfactionMissing / maxSatisfaction, quantityRessourceBoughtReceiverAgent);
 		String nameRessourceBought  	= nameRessourceMaxSatisfaction;	
 		String nameRessourceSold 		= itemSold.getNom();
-		float proposerAgentExchangeRate = finalExchangeRate(proposerAgent, nameRessourceSold, nameRessourceSold, 1);
+		float proposerAgentExchangeRate = finalExchangeRate(proposerAgent, nameRessourceSold, nameRessourceSold, ALPHA_EXCHANGE_RATE);
 		int QuantityRessourceSold 		= (int) (proposerAgentExchangeRate * QuantityRessourceBought);
 		
 		//si l'accord prévoi de vendre plus que ce que l'agent possède vraiment, on recalcule:
@@ -240,7 +244,7 @@ public class Marketer
 	
 	public float finalExchangeRate(Humain individual, String offerRessource, String demandRessource, int alpha)
 	{
-		return alpha * exchangeRate(individual, offerRessource, demandRessource) + (1-alpha) * memoryExchangeRate(individual, offerRessource, demandRessource);
+		return alpha * exchangeRate(individual, offerRessource, demandRessource) + (1 - alpha) * memoryExchangeRate(individual, offerRessource, demandRessource);
 	}
 	
 }
